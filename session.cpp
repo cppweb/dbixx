@@ -236,6 +236,9 @@ void session::bind(string const &s,bool isnull)
 			};
 			free(new_str);
 		}
+		else {
+			escaped_query+="\'\'";
+		}
 	}
 	ready_for_input=false;
 	escape();
