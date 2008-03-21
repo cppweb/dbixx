@@ -269,6 +269,7 @@ void session::exec()
 		dbi_result_free(res);
 		throw dbixx_error("exec() query may not return results");
 	}
+	dbi_result_free(res);
 }
 
 void session::fetch(result &r)
