@@ -52,6 +52,7 @@ public:
 	result() : res(NULL) {};
 	~result();
 	void assign(dbi_result r);
+	unsigned long long rows();
 	bool next(row &r);
 };
 
@@ -95,6 +96,7 @@ public:
 
 
 	void query(std::string const &query);
+	unsigned long long rowid(char const *seq=NULL);
 
 	void bind(std::string const &s,bool isnull=false);
 	void bind(long long int const &v,bool isnull=false);

@@ -73,6 +73,12 @@ void session::check_open(void)
 	if(!conn) throw dbixx_error("Backend is not open");
 }
 
+unsigned long long session::rowid(char const *name)
+{
+	check_open();
+	return dbi_conn_sequence_last(conn,name);
+}
+
 void session::error()
 {
 	char const *e;

@@ -9,6 +9,13 @@ result::~result()
 		dbi_result_free(res);
 }
 
+unsigned long long result::rows()
+{
+	if(res)
+		return dbi_result_get_numrows(res);
+	throw dbixx_error("No result assigned");
+}
+
 void result::assign(dbi_result r)
 {
 	if(res && r!=res)
