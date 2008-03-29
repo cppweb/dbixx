@@ -24,6 +24,7 @@ class row
 public:
 	row() { current=0; owner=false; res=NULL; };
 	~row();
+	dbi_result get_dbi_result() { return res; };
 	void set(dbi_result &r);
 	void reset();
 	bool isempty();
@@ -75,11 +76,13 @@ class session {
 	unsigned pos_write;
 	bool ready_for_input;
 	bool complete;
+	unsigned long long affected_rows;
 
 
 	std::string backend;
 	dbi_conn conn;
-	std::map<std::string,std::string> params; 
+	std::map<std::string,std::string> string_params; 
+	std::map<std::string,int> numeric_params; 
 	void check_open();
 	void error();
 	void escape();
@@ -90,13 +93,16 @@ public:
 	~session();
 	void driver(std::string const &backend);
 	void param(std::string const &par,std::string const &val);
+	void param(std::string const &par,int);
 	void connect();
 	void reconnect();
 	void close();
+	dbi_conn get_dbi_conn() { return conn; };
 
 
 	void query(std::string const &query);
 	unsigned long long rowid(char const *seq=NULL);
+	unsigned long long affected() { return affected_rows ;};
 
 	void bind(std::string const &s,bool isnull=false);
 	void bind(long long int const &v,bool isnull=false);

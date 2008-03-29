@@ -180,7 +180,7 @@ bool row::fetch(int pos,std::tm &t)
 	switch(type) {
 	case DBI_TYPE_DATETIME:
 		v=dbi_result_get_datetime_idx(res,pos);
-		localtime_r(&v,&t);
+		gmtime_r(&v,&t);
 		break;
 	case DBI_TYPE_STRING:
 		{

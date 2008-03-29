@@ -21,12 +21,20 @@ session::session()
 void session::connect()
 {
 	check_open();
-	map<string,string>::const_iterator i;
-	for(i=params.begin();i!=params.end();i++){
-		if(dbi_conn_set_option(conn,i->first.c_str(),i->second.c_str())) {
+	map<string,string>::const_iterator sp;
+	for(sp=string_params.begin();sp!=string_params.end();sp++){
+		if(dbi_conn_set_option(conn,sp->first.c_str(),sp->second.c_str())) {
 			error();
 		}
 	}
+
+	map<string,int>::const_iterator ip;
+	for(ip=numeric_params.begin();ip!=numeric_params.end();ip++){
+		if(dbi_conn_set_option_numeric(conn,ip->first.c_str(),ip->second)) {
+			error();
+		}
+	}
+
 	if(dbi_conn_connect(conn)<0) {
 		error();
 	}
@@ -88,7 +96,12 @@ void session::error()
 
 void session::param(string const &par,string const &val)
 {
-	params[par]=val;
+	string_params[par]=val;
+}
+
+void session::param(string const &par,int val)
+{
+	numeric_params[par]=val;
 }
 
 void session::escape()
@@ -275,6 +288,7 @@ void session::exec()
 		dbi_result_free(res);
 		throw dbixx_error("exec() query may not return results");
 	}
+	affected_rows=dbi_result_get_numrows_affected(res);
 	dbi_result_free(res);
 }
 
