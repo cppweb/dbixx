@@ -25,6 +25,15 @@ bool row::isempty()
 	return res==NULL;
 }
 
+unsigned int row::cols()
+{
+	unsigned c;
+	if(res && (c=dbi_result_get_numfields(res))!=DBI_FIELD_ERROR) {
+		return c;
+	}
+	throw dbixx_error("Failed to fetch number of columns");
+}
+
 void row::set(dbi_result &r)
 {
 	if(res && r!=res && owner) {

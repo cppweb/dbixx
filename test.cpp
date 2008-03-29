@@ -62,6 +62,7 @@ int main()
 	sql<<"select id,n,f,t,name from test limit 10",
 		res;
 	cout<<"Rows:"<<res.rows()<<endl;
+	cout<<"Cols:"<<res.cols()<<endl;
 	n=0;
 	while(res.next(r)){
 		double f=-1;
@@ -70,6 +71,7 @@ int main()
 		string name="nonset";
 		r >> id >> k >> f >> atime >> name;
 		cout <<id << ' '<<k <<' '<<f<<' '<<name<<' '<<asctime(&atime)<<endl;
+		cout<<"has "<<r.cols()<<" columns\n";
 		n++;
 	}
 

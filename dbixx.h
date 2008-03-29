@@ -44,6 +44,7 @@ public:
 	bool operator[](int ind) { return isnull(ind); };
 	template<typename T>
 	row &operator>>(T &v) { current++; fetch(current,v); return *this; };
+	unsigned int cols();
 };
 
 class result
@@ -54,6 +55,7 @@ public:
 	~result();
 	void assign(dbi_result r);
 	unsigned long long rows();
+	unsigned int cols();
 	bool next(row &r);
 };
 

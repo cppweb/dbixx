@@ -34,4 +34,15 @@ bool result::next(row &r)
 		return false;
 	}
 }
+
+unsigned int result::cols()
+{
+	unsigned c;
+	if(res && (c=dbi_result_get_numfields(res))!=DBI_FIELD_ERROR) {
+		return c;
+	}
+	throw dbixx_error("Failed to fetch number of columns");
+}
+
+
 }
