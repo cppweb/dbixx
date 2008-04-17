@@ -1,4 +1,5 @@
 #include "dbixx.h"
+#include <iostream>
 
 namespace dbixx {
 using namespace std;
