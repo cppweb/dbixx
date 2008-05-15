@@ -136,6 +136,17 @@ public:
 	bool operator,(row &r) { return single(r); };
 };
 
+class transaction {
+	session &sql;
+	bool commited;
+	void begin();
+public:
+	transaction(session &s) : sql(s) { commited=false; begin(); }
+	void commit();
+	void rollback();
+	~transaction();
+};
+
 }
 
 #endif // _DBIXX_H_

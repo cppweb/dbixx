@@ -324,5 +324,31 @@ bool session::single(row &r)
 	return false;
 }
 
+transaction::~transaction()
+{
+	if(!commited){
+		try {
+			sql<<"ROLLBACK",exec();
+		}
+		catch(...){}
+	}
+}
+
+void transaction::begin()
+{
+	sql<<"BEGIN",exec();
+}
+
+void transaction::commit()
+{
+	sql<<"COMMIT",exec();
+	commited=true;
+}
+
+void transaction::rollback()
+{
+	sql<<"ROLLBACK",exec();
+	commited=true;
+}
 
 } // END OF NAMESPACE DBIXX
