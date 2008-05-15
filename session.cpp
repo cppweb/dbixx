@@ -91,7 +91,7 @@ void session::error()
 {
 	char const *e;
 	dbi_conn_error(conn,&e);
-	throw dbixx_error(e);
+	throw dbixx_error(e,escaped_query);
 }
 
 void session::param(string const &par,string const &val)

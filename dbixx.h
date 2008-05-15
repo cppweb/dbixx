@@ -11,8 +11,13 @@ namespace dbixx {
 
 class dbixx_error : public std::runtime_error
 {
+	char query_[256];
 public:
-	dbixx_error(std::string const &error) : std::runtime_error(error) {};
+	char const *query() const { return query_; };
+	dbixx_error(std::string const &error,std::string const &q="") : std::runtime_error(error)
+	{
+		strncpy(query_,q.c_str(),256);
+	};
 };
 
 class row 
