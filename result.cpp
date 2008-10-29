@@ -25,6 +25,8 @@ void result::assign(dbi_result r)
 
 bool result::next(row &r)
 {
+	if(!res)
+		throw dbixx_error("No result assigned");
 	if(dbi_result_next_row(res)) {
 		r.set(res);
 		return true;
