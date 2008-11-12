@@ -26,6 +26,9 @@ class row
 	bool owner;
 	int current;
 	void check_set();
+private:
+	row(row const &);
+	row const &operator=(row const &);
 public:
 	row() { current=0; owner=false; res=NULL; };
 	~row();
@@ -55,6 +58,9 @@ public:
 class result
 {
 	dbi_result res;
+private:
+	result(result const &);
+	result const &operator=(result const &);
 public:
 	result() : res(NULL) {};
 	~result();
@@ -94,6 +100,9 @@ class session {
 	void error();
 	void escape();
 	void check_input();
+private:
+	session(session const &);
+	session const &operator=(session const &);
 public:
 	session();
 	session(std::string const &backend);
@@ -145,6 +154,9 @@ class transaction {
 	session &sql;
 	bool commited;
 	void begin();
+private:
+	transaction(transaction const &);
+	transaction const &operator=(transaction const &);
 public:
 	transaction(session &s) : sql(s) { commited=false; begin(); }
 	void commit();
