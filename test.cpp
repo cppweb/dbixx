@@ -3,18 +3,26 @@
 using namespace dbixx;
 using namespace std;
 
+struct e_t {
+	double f;
+	int id,k;
+	std::tm atime;
+	string name;
+};
+
 int main()
 {
-//	session sql("sqlite3");
-//	sql.param("dbname","test.db");
-//	sql.param("sqlite3_dbdir","./");
+	try {
+	session sql("sqlite3");
+	sql.param("dbname","test.db");
+	sql.param("sqlite3_dbdir","./");
 
-	session sql("mysql");
+/*	session sql("mysql");
 	sql.param("dbname","cppcms");
 	sql.param("username","root");
 	sql.param("password","root");
 	sql.param("host","127.0.0.1");
-	sql.param("port",3306);
+	sql.param("port",3306);*/
 
 //	session sql("pgsql");
 //	sql.param("dbname","cppcms");
@@ -32,10 +40,10 @@ int main()
 	catch(dbixx_error const &e) {
 	}
 
-	sql<<"create table test ( id integer primary key auto_increment not null,n integer, f real , t timestamp ,name text )",
-		exec();
-	//sql<<"create table test ( id integer primary key autoincrement not null,n integer, f real , t timestamp ,name text )",
+	//sql<<"create table test ( id integer primary key auto_increment not null,n integer, f real , t timestamp ,name text )",
 	//	exec();
+	sql<<"create table test ( id integer primary key autoincrement not null,n integer, f real , t timestamp ,name text )",
+		exec();
 	//sql<<"create table test ( id  serial  primary key not null ,n integer, f real , t timestamp ,name text )",
 	//	exec();
 	std::tm t;
@@ -75,8 +83,27 @@ int main()
 		n++;
 	}
 
+	sql<<"select id,n,f,t,name from test limit 10",
+		res;
+
+	vector<e_t> elements;
+	res.bind(elements)
+		<<&e_t::id << &e_t::k << &e_t::f << &e_t::atime << &e_t::name;
+
+	unsigned i;
+	for(i=0;i<elements.size();i++){
+		cout <<elements[i].id << ' '<< elements[i].k
+		 <<' '<<elements[i].f<<' '<<elements[i].name<<' '<<
+		 asctime(&elements[i].atime)<<endl;
+	}
+
 	sql<<"delete from test",
 		exec();
 	cout<<"Deleted "<<sql.affected()<<" rows\n";
 	return 0;
+	}
+	catch(std::exception const &e) {
+		cerr<<"Failed:"<<e.what()<<endl;
+		return 1;
+	}
 }
