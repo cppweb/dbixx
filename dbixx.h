@@ -27,24 +27,16 @@ class row
 	bool owner;
 	int current;
 	void check_set();
+private:
+	row(row const &);
 	row const &operator=(row const &);
 public:
-	row(row &r) :
-		res(r.res),
-		owner(r.owner),
-		current(r.current)
-	{
-		if(r.owner) {
-			r.res=NULL;
-		}
-	};
 	row() { current=0; owner=false; res=NULL; };
 	~row();
 	dbi_result get_dbi_result() { return res; };
 	void set(dbi_result &r);
 	void reset();
 	bool isempty();
-	operator bool () { return !isempty(); }
 	void assign(dbi_result &r);
 	bool isnull(int inx);
 	bool isnull(std::string const &id);
@@ -60,46 +52,32 @@ public:
 	bool operator[](std::string const & id) { return isnull(id); };
 	bool operator[](int ind) { return isnull(ind); };
 	template<typename T>
-	row &operator>>(T &v)
-	{
-		if(res) {
-			current++;
-			fetch(current,v);
-		}
-		return *this;
-	};
-	template<typename T>
-	row &operator % (T &v)
-	{
-		*this>>v;
-		return *this;
-	}
+	row &operator>>(T &v) { current++; fetch(current,v); return *this; };
 	unsigned int cols();
 };
 
 namespace details {
-template<typename C,typename T,typename R>
+template<typename C,typename T>
 struct result_binder;
 }
 
 class result
 {
 	dbi_result res;
+private:
+	result(result const &);
+	result const &operator=(result const &);
 public:
 	result() : res(NULL) {};
 	~result();
-	result(result &rc); // Move construction
-	result &operator=(result &rc); // Move assignment
-
 	void assign(dbi_result r);
 	unsigned long long rows();
 	unsigned int cols();
 	bool next(row &r);
 	template<typename C>
-	details::result_binder<C,typename C::value_type,result &> bind(C &c)
+	details::result_binder<C,typename C::value_type> bind(C &c)
 	{
-		details::result_binder<C,typename C::value_type,result &> tmp(c,*this);
-		return tmp;
+		return details::result_binder<C,typename C::value_type>(c,*this);
 	}
 };
 
@@ -123,30 +101,18 @@ struct row_binder : public basic_row_binder<T>
 	}
 };
 
-template<typename C,typename T,typename R>
-class result_binder {
+template<typename C,typename T>
+struct result_binder {
 	C &collection;
-	R res;
+	result &res;
 	unsigned cols;
 	typedef std::vector<basic_row_binder<T> *> members_t;
 	members_t members;
-	// Not assignable
-	result_binder const &operator=(result_binder const &);
-public:
-	// Move constructor
-	result_binder(result_binder<C,T,R> &src) :
-		collection(src.collection),
-		res(src.res),
-		cols(src.cols),
-		members(src.members)
-	{
-		src.members.clear();
-	}
-	result_binder(C &c,R r) :
+	result_binder(C &c,result &r) :
 		collection(c),
-		res(r)
+		res(r),
+		cols(r.cols())
 	{
-		cols=res.cols();
 		members.reserve(cols);
 	}
 	~result_binder()
@@ -158,7 +124,7 @@ public:
 		}
 	}
 	template<typename M>
-	result_binder<C,T,R> &operator % (M T::*p)
+	result_binder<C,T> &operator<<(M T::*p)
 	{
 		members.push_back(new row_binder<T,M>(p));
 		if(members.size()==cols) {
@@ -212,7 +178,6 @@ class session {
 	void error();
 	void escape();
 	void check_input();
-
 private:
 	session(session const &);
 	session const &operator=(session const &);
@@ -243,29 +208,10 @@ public:
 	void bind(null const &,bool isnull=true);
 
 	void exec();
+
 	void fetch(result &res);
-	result fetch() {
-		result res;
-		fetch(res);
-		return res;
-	}
-	template<typename C>
-	details::result_binder<C,typename C::value_type,result> fetch(C &c)
-	{
-		result tmp;
-		fetch(tmp);
-		details::result_binder<C,typename C::value_type,result> 
-			binder(c,tmp);
-		return binder;
-	}
 
 	bool single(row &r);
-	row single()
-	{
-		row r;
-		single(r);
-		return r;
-	}
 
 	/* Syntactic sugar */
 	

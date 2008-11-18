@@ -46,19 +46,5 @@ unsigned int result::cols()
 	throw dbixx_error("Failed to fetch number of columns");
 }
 
-result::result(result &rc) :
-	res(rc.res)
-{
-	// Change owner
-	rc.res=NULL;
-}
-result &result::operator=(result &rc) 
-{	
-	if(&rc!=this) {
-		if(res) dbi_result_free(res);
-		res=rc.res;
-		rc.res=NULL;
-	}
-}
 
 }
