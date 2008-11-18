@@ -1,5 +1,6 @@
 #include "dbixx.h"
 #include <iostream>
+#include <list>
 using namespace dbixx;
 using namespace std;
 
@@ -83,18 +84,42 @@ int main()
 		n++;
 	}
 
-	sql<<"select id,n,f,t,name from test limit 10",
-		res;
-
+	{
 	vector<e_t> elements;
-	res.bind(elements)
-		<<&e_t::id << &e_t::k << &e_t::f << &e_t::atime << &e_t::name;
+	sql<<"select id,n,f,t,name from test limit 10";
+	sql.fetch(elements)
+		% &e_t::id % &e_t::k % &e_t::f % &e_t::atime % &e_t::name;
+
 
 	unsigned i;
 	for(i=0;i<elements.size();i++){
 		cout <<elements[i].id << ' '<< elements[i].k
 		 <<' '<<elements[i].f<<' '<<elements[i].name<<' '<<
 		 asctime(&elements[i].atime)<<endl;
+	}
+	}
+
+	{
+	list<e_t> elements;
+	sql<<"select id,n,f,t,name from test limit 10",res;
+	res.bind(elements)
+		% &e_t::id % &e_t::k % &e_t::f % &e_t::atime % &e_t::name;
+
+	for(list<e_t>::iterator i=elements.begin();i!=elements.end();++i){
+		cout <<i->id << ' '<< i->k
+		 <<' '<<i->f<<' '<<i->name<<' '<<
+		 asctime(&i->atime)<<endl;
+	}
+	}
+	for(int k=10;k<=11;k++) {
+		string name;
+		sql<<"SELECT name FROM test WHERE n=?",k;
+		if(sql.single() % name) {
+			cout<<k<<":"<<name<<endl;
+		}
+		else {
+			cout<<k<<":"<<"Not found\n";
+		}
 	}
 
 	sql<<"delete from test",
