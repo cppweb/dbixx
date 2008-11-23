@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <ctime>
 #include <map>
-#include <vector>
 #include <iostream>
 
 namespace dbixx {
@@ -27,13 +26,6 @@ class row
 	bool owner;
 	int current;
 	void check_set();
-
-	void set(dbi_result &r);
-	void reset();
-	void assign(dbi_result &r);
-	bool next();
-	friend class session;
-	friend class result;
 private:
 	row(row const &);
 	row const &operator=(row const &);
@@ -41,7 +33,10 @@ public:
 	row() { current=0; owner=false; res=NULL; };
 	~row();
 	dbi_result get_dbi_result() { return res; };
+	void set(dbi_result &r);
+	void reset();
 	bool isempty();
+	void assign(dbi_result &r);
 	bool isnull(int inx);
 	bool isnull(std::string const &id);
 	bool fetch(int pos,int &value);
@@ -51,6 +46,7 @@ public:
 	bool fetch(int pos,double &value);
 	bool fetch(int pos,std::string &value);
 	bool fetch(int pos,std::tm &value);
+	bool next();
 	// Sugar
 	bool operator[](std::string const & id) { return isnull(id); };
 	bool operator[](int ind) { return isnull(ind); };
@@ -59,98 +55,20 @@ public:
 	unsigned int cols();
 };
 
-namespace details {
-template<typename C,typename T>
-struct result_binder;
-}
-
 class result
 {
 	dbi_result res;
-	void assign(dbi_result r);
-	friend class session;
 private:
 	result(result const &);
 	result const &operator=(result const &);
 public:
 	result() : res(NULL) {};
 	~result();
+	void assign(dbi_result r);
 	unsigned long long rows();
 	unsigned int cols();
 	bool next(row &r);
-	template<typename C>
-	details::result_binder<C,typename C::value_type> bind(C &c)
-	{
-		return details::result_binder<C,typename C::value_type>(c,*this);
-	}
 };
-
-namespace details {
-
-template<typename T>
-struct basic_row_binder
-{
-	virtual void bind(row &r,T &p)
-	{ throw dbixx_error("Direct use of basic_row_binder"); };
-	virtual ~basic_row_binder(){}
-};
-
-template<typename T,typename M>
-struct row_binder : public basic_row_binder<T>
-{
-	M T::*m_;
-	row_binder(M T::*m) : m_(m) {}
-	virtual void bind(row &r,T &p) {
-		r>>(p.*m_);
-	}
-};
-
-template<typename C,typename T>
-struct result_binder {
-	C &collection;
-	result &res;
-	unsigned cols;
-	typedef std::vector<basic_row_binder<T> *> members_t;
-	members_t members;
-	result_binder(C &c,result &r) :
-		collection(c),
-		res(r),
-		cols(r.cols())
-	{
-		members.reserve(cols);
-	}
-	~result_binder()
-	{
-		typename members_t::iterator p;
-		for(p=members.begin();p!=members.end();++p)
-		{
-			delete *p;
-		}
-	}
-	template<typename M>
-	result_binder<C,T> &operator<<(M T::*p)
-	{
-		members.push_back(new row_binder<T,M>(p));
-		if(members.size()==cols) {
-			run();
-		}
-		return *this;
-	}
-	void run()
-	{
-		collection.resize(res.rows());
-		typename members_t::iterator c;
-		row r;
-		for(typename C::iterator p=collection.begin();res.next(r);++p) {
-			for(c=members.begin();c!=members.end();++c) {
-				(*c)->bind(r,*p);
-			}
-		}
-	}
-};
-
-} // namespace details
-
 
 /* Auxilary types/functions for syntactic sugar */
 
@@ -245,7 +163,6 @@ public:
 	void rollback();
 	~transaction();
 };
-
 
 }
 
