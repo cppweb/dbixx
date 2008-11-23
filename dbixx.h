@@ -26,6 +26,13 @@ class row
 	bool owner;
 	int current;
 	void check_set();
+
+	void set(dbi_result &r);
+	void reset();
+	void assign(dbi_result &r);
+	bool next();
+	friend class session;
+	friend class result;
 private:
 	row(row const &);
 	row const &operator=(row const &);
@@ -33,10 +40,7 @@ public:
 	row() { current=0; owner=false; res=NULL; };
 	~row();
 	dbi_result get_dbi_result() { return res; };
-	void set(dbi_result &r);
-	void reset();
 	bool isempty();
-	void assign(dbi_result &r);
 	bool isnull(int inx);
 	bool isnull(std::string const &id);
 	bool fetch(int pos,int &value);
@@ -46,7 +50,6 @@ public:
 	bool fetch(int pos,double &value);
 	bool fetch(int pos,std::string &value);
 	bool fetch(int pos,std::tm &value);
-	bool next();
 	// Sugar
 	bool operator[](std::string const & id) { return isnull(id); };
 	bool operator[](int ind) { return isnull(ind); };
@@ -58,13 +61,14 @@ public:
 class result
 {
 	dbi_result res;
+	void assign(dbi_result r);
+	friend class session;
 private:
 	result(result const &);
 	result const &operator=(result const &);
 public:
 	result() : res(NULL) {};
 	~result();
-	void assign(dbi_result r);
 	unsigned long long rows();
 	unsigned int cols();
 	bool next(row &r);
