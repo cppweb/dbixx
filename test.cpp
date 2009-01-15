@@ -5,16 +5,16 @@ using namespace std;
 
 int main()
 {
-//	session sql("sqlite3");
-//	sql.param("dbname","test.db");
-//	sql.param("sqlite3_dbdir","./");
+	session sql("sqlite3");
+	sql.param("dbname","test.db");
+	sql.param("sqlite3_dbdir","./");
 
-	session sql("mysql");
-	sql.param("dbname","cppcms");
-	sql.param("username","root");
-	sql.param("password","root");
-	sql.param("host","127.0.0.1");
-	sql.param("port",3306);
+//	session sql("mysql");
+//	sql.param("dbname","cppcms");
+//	sql.param("username","root");
+//	sql.param("password","root");
+//	sql.param("host","127.0.0.1");
+//	sql.param("port",3306);
 
 //	session sql("pgsql");
 //	sql.param("dbname","cppcms");
@@ -23,19 +23,19 @@ int main()
 
 	sql.connect();
 	
-	//sql<<"drop table if exists test",
-	//	exec();
-	try {
-		sql<<"drop table test",
-			exec();	
-	}
-	catch(dbixx_error const &e) {
-	}
-
-	sql<<"create table test ( id integer primary key auto_increment not null,n integer, f real , t timestamp ,name text )",
+	sql<<"drop table if exists test",
 		exec();
-	//sql<<"create table test ( id integer primary key autoincrement not null,n integer, f real , t timestamp ,name text )",
-	//	exec();
+//	try {
+//		sql<<"drop table test",
+//			exec();	
+//	}
+//	catch(dbixx_error const &e) {
+//	}
+
+	//sql<<"create table test ( id integer primary key auto_increment not null,n integer, f real , t timestamp ,name text )",
+	///	exec();
+	sql<<"create table test ( id integer primary key autoincrement not null,n integer, f real , t timestamp ,name text )",
+		exec();
 	//sql<<"create table test ( id  serial  primary key not null ,n integer, f real , t timestamp ,name text )",
 	//	exec();
 	std::tm t;
