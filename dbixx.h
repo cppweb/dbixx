@@ -6,6 +6,7 @@
 #include <ctime>
 #include <map>
 #include <iostream>
+#include <cstring>
 
 namespace dbixx {
 
@@ -16,7 +17,7 @@ public:
 	char const *query() const { return query_; };
 	dbixx_error(std::string const &error,std::string const &q="") : std::runtime_error(error)
 	{
-		strncpy(query_,q.c_str(),256);
+		std::strncpy(query_,q.c_str(),256);
 	};
 };
 
