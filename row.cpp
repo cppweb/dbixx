@@ -1,6 +1,8 @@
 #include "dbixx.h"
 #include <iostream>
 
+#include <stdio.h>
+
 namespace dbixx {
 using namespace std;
 
