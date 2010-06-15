@@ -41,7 +41,7 @@ int main()
 	std::tm t;
 	time_t tt;
 	tt=time(NULL);
-	localtime_r(&tt,&t);
+	t=*localtime(&tt);
 	cout<<asctime(&t);
 
 	

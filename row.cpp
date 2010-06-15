@@ -3,6 +3,10 @@
 
 #include <stdio.h>
 
+#if defined(_WIN32) || defined(WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#define WIN_NATIVE
+#endif
+
 namespace dbixx {
 using namespace std;
 
@@ -191,7 +195,11 @@ bool row::fetch(int pos,std::tm &t)
 	switch(type) {
 	case DBI_TYPE_DATETIME:
 		v=dbi_result_get_datetime_idx(res,pos);
+		#ifdef WIN_NATIVE
+		t=*gmtime(&v);
+		#else
 		gmtime_r(&v,&t);
+		#endif
 		break;
 	case DBI_TYPE_STRING:
 		{
@@ -206,7 +214,11 @@ bool row::fetch(int pos,std::tm &t)
 			t.tm_mon-=1;
 			// Fill correct rest of fields
 			v=mktime(&t);
+			#ifdef WIN_NATIVE
+			t=*localtime(&v);
+			#else
 			localtime_r(&v,&t);
+			#endif
 		}
 		break;
 	default:
