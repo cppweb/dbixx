@@ -1,6 +1,5 @@
 #include "dbixx.h"
-#include <iostream>
-
+#include <limits>
 #include <stdio.h>
 
 #if defined(_WIN32) || defined(WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -91,23 +90,38 @@ bool row::isnull(std::string const &id)
 	return r;
 }
 
-bool row::fetch(int pos,int &value)
+template<typename T>
+bool row::sfetch(int pos,T &value)
 {
 	long long v;
 	bool r=fetch(pos,v);
-	if(r)
-		value=v;
+	if(r) {
+		if(v>std::numeric_limits<T>::max() || v < std::numeric_limits<T>::min())
+			throw dbixx_error("Bad cast to integer of small size");
+		value=static_cast<T>(v);
+	}
 	return r;
 }
 
-bool row::fetch(int pos,unsigned &value)
+template<typename T>
+bool row::ufetch(int pos,T &value)
 {
 	unsigned long long v;
 	bool r=fetch(pos,v);
-	if(r)
-		value=v;
+	if(r) {
+		if(v>std::numeric_limits<T>::max())
+			throw dbixx_error("Bad cast to integer of small size");
+		value=static_cast<T>(v);
+	}
 	return r;
 }
+
+bool row::fetch(int pos,short &v) { return sfetch(pos,v); }
+bool row::fetch(int pos,int &v) { return sfetch(pos,v); }
+bool row::fetch(int pos,long &v) { return sfetch(pos,v); }
+bool row::fetch(int pos,unsigned short &v) { return ufetch(pos,v); }
+bool row::fetch(int pos,unsigned int &v) { return ufetch(pos,v); }
+bool row::fetch(int pos,unsigned long &v) { return ufetch(pos,v); }
 
 bool row::fetch(int pos,long long &v)
 {
@@ -119,7 +133,8 @@ bool row::fetch(int pos,long long &v)
 		v=dbi_result_get_longlong_idx(res,pos);
 		break;
 	case DBI_TYPE_STRING:
-		v=atol(dbi_result_get_string_idx(res,pos));
+		if(sscanf(dbi_result_get_string_idx(res,pos),"%lld",&v)!=1)
+			dbixx_error("Bad cast to integer type");
 		break;
 	default:
 		dbixx_error("Bad cast to integer type");
@@ -137,7 +152,8 @@ bool row::fetch(int pos,unsigned long long &v)
 		v=dbi_result_get_ulonglong_idx(res,pos);
 		break;
 	case DBI_TYPE_STRING:
-		v=atol(dbi_result_get_string_idx(res,pos));
+		if(sscanf(dbi_result_get_string_idx(res,pos),"%llu",&v)!=1)
+			dbixx_error("Bad cast to integer type");
 		break;
 	default:
 		dbixx_error("Bad cast to integer type");
@@ -162,6 +178,24 @@ bool row::fetch(int pos,string &v)
 		dbixx_error("Bad cast to string type");
 	}
 	return true;	
+}
+
+bool row::fetch(int pos,float &v)
+{
+	double tmp;
+	if(!fetch(pos,tmp))
+		return false;
+	v=static_cast<float>(tmp);
+	return true;
+}
+
+bool row::fetch(int pos,long double &v)
+{
+	double tmp;
+	if(!fetch(pos,tmp))
+		return false;
+	v=tmp;
+	return true;
 }
 
 bool row::fetch(int pos,double &v)
@@ -194,7 +228,6 @@ bool row::fetch(int pos,std::tm &t)
 	time_t v;
 	switch(type) {
 	case DBI_TYPE_DATETIME:
-		std::cerr << "There" << std::endl;
 		v=dbi_result_get_datetime_idx(res,pos);
 		std::tm tmp;
 		#ifdef WIN_NATIVE

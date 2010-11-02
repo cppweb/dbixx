@@ -1,5 +1,8 @@
 #include "dbixx.h"
 #include <stdio.h>
+#include <limits>
+#include <iomanip>
+#include <sstream>
 
 namespace dbixx {
 
@@ -17,6 +20,88 @@ static loader backend_loader;
 session::session()
 {
 	conn=NULL;
+}
+
+void session::connect(std::string const &connection_string)
+{
+	size_t p = connection_string.find(':');
+	if( p == std::string::npos )
+		throw dbixx_error("Invalid connection string - no driver given");
+	driver(connection_string.substr(0,p));
+	p++;
+	while(p<connection_string.size()) {
+		size_t n=connection_string.find('=',p);
+		if(n==std::string::npos)
+			throw dbixx_error("Invalid connection string - invalid property");
+		std::string key = connection_string.substr(p,n-p);
+		p=n+1;
+		std::string value;
+		bool is_string = true;
+		if(p>=connection_string.size()) {
+			/// Nothing - empty property
+		}
+		else if(connection_string[p]=='\'') {
+			p++;
+			while(true) {
+				if(p>=connection_string.size()) {
+					throw dbixx_error("Invalid connection string unterminated string");
+				}
+				if(connection_string[p]=='\'') {
+					if(p+1 < connection_string.size() && connection_string[p+1]=='\'') {
+						value+='\'';
+						p+=2;
+					}
+					else {
+						p++;
+						break;
+					}
+				}
+				else {
+					value+=connection_string[p];
+					p++;
+				}
+			}
+		}
+		else {
+			size_t n=connection_string.find(';',p);
+			if(n==std::string::npos) {
+				value=connection_string.substr(p);
+				p=connection_string.size();
+			}
+			else {
+				value=connection_string.substr(p,n-p);
+				p=n;
+			}
+			if(!value.empty()) {
+				size_t pos = 0;
+				if(value[0]=='-') {
+					pos = 1;
+				}
+				bool digit_detected = false;
+				bool only_digits = true;
+				while(pos < value.size() && only_digits) {
+					if('0'<=value[pos] && value[pos]<='9')
+						digit_detected = true;
+					else
+						only_digits = false;
+					pos++;
+				}
+				if(only_digits && digit_detected) {
+					is_string = false;
+				}
+			}
+		}
+		if(is_string) {
+			param(key,value);
+		}
+		else {
+			param(key,atoi(value.c_str()));
+		}
+		if(p < connection_string.size() && connection_string[p]==';')
+			++p;
+
+	}
+	connect();
 }
 
 void session::connect()
@@ -48,10 +133,14 @@ void session::reconnect()
 	connect();
 }
 
-session::session(string const &backend)
+session::session(string const &backend_or_conn_str)
 {
 	conn=NULL;
-	driver(backend);
+
+	if(backend_or_conn_str.find(':')==std::string::npos)
+		driver(backend_or_conn_str);
+	else
+		connect(backend_or_conn_str);
 }
 
 void session::close()
@@ -75,6 +164,11 @@ void session::driver(string const &backend)
 	if(!conn) {
 		throw dbixx_error("Failed to load backend");
 	}
+}
+
+std::string session::driver()
+{
+	return backend;
 }
 
 void session::check_open(void) 
@@ -145,80 +239,61 @@ void session::check_input()
 	}
 }
 
-void session::bind(long long const &v,bool isnull)
+template<typename T>
+void session::do_bind(T v,bool is_null)
 {
 	check_input();
 	// The representation of a number in decimal form
 	// is more compact then in binary so it should be enough
-	char buffer[sizeof(long long)*8];
-	if(isnull) {
+	if(is_null) {
 		escaped_query+="NULL";
 	}
 	else {
-		if((int)sizeof(buffer)<snprintf(buffer,sizeof(buffer),"%lld",v)) {
-			throw dbixx_error("Internal Error - buffer_size");
+		std::ostringstream ss;
+		ss.imbue(std::locale::classic());
+		
+		if(!std::numeric_limits<T>::is_integer) {
+			ss<<std::setprecision(std::numeric_limits<T>::digits10+1);
 		}
-		escaped_query+=buffer;
+
+		ss << v;
+		escaped_query+=ss.str();
 	}
 	ready_for_input=false;
 	escape();
 }
 
-void session::bind(double const &v,bool isnull)
-{
-	check_input();
-	// The representation of a number in decimal form
-	// is more compact then in binary so it should be enough
-	char buffer[sizeof(double)*8];
-	if(isnull) {
-		escaped_query+="NULL";
-	}
-	else {
-		if((int)sizeof(buffer)<snprintf(buffer,sizeof(buffer),"%e",v)) {
-			throw dbixx_error("Internal Error - buffer_size");
-		}
-		escaped_query+=buffer;
-	}
-	ready_for_input=false;
-	escape();
-}
-void session::bind(unsigned long long const &v,bool isnull)
-{
-	check_input();
-	// The representation of a number in decimal form
-	// is more compact then in binary so it should be enough
-	char buffer[sizeof(long long)*8];
-	if(isnull) {
-		escaped_query+="NULL";
-	}
-	else {
-		if((int)sizeof(buffer)<snprintf(buffer,sizeof(buffer),"%llu",v)) {
-			throw dbixx_error("Internal Error - buffer_size");
-		}
-		escaped_query+=buffer;
-	}
-	ready_for_input=false;
-	escape();
-}
+void session::bind(int v,bool isnull) { do_bind(v,isnull); }
+void session::bind(unsigned v,bool isnull) { do_bind(v,isnull); }
+void session::bind(long v,bool isnull) { do_bind(v,isnull); }
+void session::bind(unsigned long v,bool isnull) { do_bind(v,isnull); }
+void session::bind(long long v,bool isnull) { do_bind(v,isnull); }
+void session::bind(unsigned long long v,bool isnull) { do_bind(v,isnull); }
+void session::bind(double v,bool isnull) { do_bind(v,isnull); }
+void session::bind(long double v,bool isnull) { do_bind(v,isnull); }
 
 void session::bind(std::tm const &v,bool isnull)
 {
 	check_input();
 	// The representation of a number in decimal form
 	// is more compact then in binary so it should be enough
-	char buffer[1+4+1+2+1+2+1+2+1+2+1+2+1+1]; // '2008-01-01 12:23:43' 
 	if(isnull) {
 		escaped_query+="NULL";
 	}
 	else {
-		if((int)sizeof(buffer)<snprintf(buffer,sizeof(buffer),
-			"'%04d-%02d-%02d %02d:%02d:%02d'",
-			v.tm_year+1900,v.tm_mon+1,v.tm_mday,
-			v.tm_hour,v.tm_min,v.tm_sec)) 
-		{
-			throw dbixx_error("Internal Error - buffer_size");
-		}
-		escaped_query+=buffer;
+		std::ostringstream ss;
+		ss.imbue(std::locale::classic());
+		ss<<std::setfill('0');
+		ss <<"'";
+		ss << std::setw(4) << v.tm_year+1900 <<'-';
+		ss << std::setw(2) << v.tm_mon+1 <<'-';
+		ss << std::setw(2) << v.tm_mday <<' ';
+		ss << std::setw(2) << v.tm_hour <<':';
+		ss << std::setw(2) << v.tm_min  <<':'; 
+		ss << std::setw(2) << v.tm_sec;
+		ss <<"'";
+
+		escaped_query+=ss.str();
 	}
 	ready_for_input=false;
 	escape();

@@ -5,23 +5,11 @@ using namespace std;
 
 int main()
 {
-	session sql("sqlite3");
-	sql.param("dbname","test.db");
-	sql.param("sqlite3_dbdir","./");
+	try {
+	session sql("sqlite3:dbname=test.db;sqlite3_dbdir=./");
+	//session sql("mysql:dbname='cppcms';username=root;password='root';host=127.0.0.1;port=3306");
+	//session sql("pgsql:dbname=cppcms;username=artik");
 
-//	session sql("mysql");
-//	sql.param("dbname","cppcms");
-//	sql.param("username","root");
-//	sql.param("password","root");
-//	sql.param("host","127.0.0.1");
-//	sql.param("port",3306);
-
-//	session sql("pgsql");
-//	sql.param("dbname","cppcms");
-//	sql.param("username","artik");
-
-
-	sql.connect();
 	
 	sql<<"drop table if exists test",
 		exec();
@@ -79,4 +67,11 @@ int main()
 		exec();
 	cout<<"Deleted "<<sql.affected()<<" rows\n";
 	return 0;
+	}
+	catch(dbixx_error const  &e) {
+		std::cerr<<"Error:"<<e.what()<<" for query:" << e.query() << std::endl;
+	}
+	catch(exception const  &e) {
+		std::cerr<<"Error:"<<e.what()<<std::endl;
+	}
 }
