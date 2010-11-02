@@ -194,15 +194,27 @@ bool row::fetch(int pos,std::tm &t)
 	time_t v;
 	switch(type) {
 	case DBI_TYPE_DATETIME:
+		std::cerr << "There" << std::endl;
 		v=dbi_result_get_datetime_idx(res,pos);
+		std::tm tmp;
 		#ifdef WIN_NATIVE
-		t=*gmtime(&v);
+		tmp=*gmtime(&v);
 		#else
-		gmtime_r(&v,&t);
+		gmtime_r(&v,&tmp);
 		#endif
+		memset(&t,0,sizeof(t));
+		t.tm_year = tmp.tm_year;
+		t.tm_mon = tmp.tm_mon;
+		t.tm_mday = tmp.tm_mday;
+		t.tm_hour = tmp.tm_hour;
+		t.tm_min = tmp.tm_min;
+		t.tm_sec = tmp.tm_sec;
+		t.tm_isdst = -1;
+		mktime(&t);
 		break;
 	case DBI_TYPE_STRING:
 		{
+			memset(&t,0,sizeof(t));
 			char const *d=dbi_result_get_string_idx(res,pos);
 			if(sscanf(d,"%d-%d-%d %d:%d:%d",
 				&t.tm_year,&t.tm_mon,&t.tm_mday,
@@ -212,13 +224,8 @@ bool row::fetch(int pos,std::tm &t)
 			}
 			t.tm_year-=1900;
 			t.tm_mon-=1;
-			// Fill correct rest of fields
-			v=mktime(&t);
-			#ifdef WIN_NATIVE
-			t=*localtime(&v);
-			#else
-			localtime_r(&v,&t);
-			#endif
+			t.tm_isdst = -1;
+			mktime(&t);
 		}
 		break;
 	default:
