@@ -63,7 +63,7 @@ int main()
 		n++;
 	}
 
-	sql<<"delete from test",
+	sql<<"delete from test where 1<>0",
 		exec();
 	cout<<"Deleted "<<sql.affected()<<" rows\n";
 	return 0;
