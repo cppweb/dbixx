@@ -1,0 +1,131 @@
+/*! \mainpage DbiXX - SQL Connectivity Library
+
+DbiXX is general purpose library to execute SQL queries in a safe way. It is a wrapper around of 
+<a href="http://libdbi.sourceforge.net/">libdbi</a> C library providing suitable exception safe and object oriented C++ interface.
+
+\section tur Turorial
+
+Let's see a simple example.
+
+\code
+#include <dbixx/dbixx.h>
+#include <iostream>
+
+using namespace dbixx;
+using namespace std;
+
+int main()
+{
+    try {
+        session sql("sqlite3:dbname=test.db;sqlite3_dbdir=./");
+
+        sql<<"DROP TABLE IF EXISTS users";
+        sql.exec();
+        sql<<"CREATE TABLE users ( "
+             " id integer primary key not null, "
+             " name varchar(128) not null "
+             ");";
+        sql.exec();
+        sql<<"INSERT INTO users(id,name) VALUES(?,?)",
+             1,"Moshe",exec();
+        sql<<"INSERT INTO users(id,name) VALUES(?,?)",
+             2,"Yossi",exec();
+        sql<<"SELECT name FROM users WHERE id=?",1;
+        row r;
+        if(sql.single(r)) {
+            string name;
+            r>>name;
+            cout<<name<<endl;
+        }
+        else {
+            cout<<"No user with id="<<1<<endl;
+        }
+        result res;
+        sql<<"SELECT id,name FROM users";
+        sql.fetch(res);
+        cout<<"There are "<<res.rows()<<" users\n";
+        while(res.next(r)) {
+            int id;
+            string name;
+            r>>id>>name;
+            cout<<id<<"\t"<<name<<endl;
+        }
+    }
+    catch(std::exception const &e) {
+        cerr<<e.what()<<endl;
+        return 1;
+    }
+    return 0;
+}
+\endcode
+
+First we create a sql session object and load the driver "sqlite3" using simple connection string. 
+
+\code
+session sql("sqlite3:dbname=test.db;sqlite3_dbdir=./");
+\endcode
+
+Then we perform queries. First we prepare them using
+"iostreams like" style:
+
+\code
+sql<<"DROP TABLE IF EXISTS users";
+\endcode
+
+and then execute the operation:
+
+\code
+sql.exec();
+\endcode
+
+There is a syntactic sugar for this operation:
+
+\code
+sql<<"DROP TABLE IF EXISTS users",exec();
+\endcode
+
+Then we want to execute some commands using parameters
+binding:
+
+\code
+sql<<"INSERT INTO users(id,name) VALUES(?,?)",
+     1,"Moshe",exec();
+\endcode
+
+First we load our query. Each "?" represents a bound parameter. Then, using overloaded comma operator, we bind actual values: the integer "1" and the string "Moshe". 
+
+\note Every bound string is automatically escaped.
+
+Now we want to fetch a single row of data. First, we bind the query and its parameters as before.
+
+\code
+sql<<"SELECT name FROM users WHERE id=?",1;
+\endcode
+
+But now, we store the output data in a single row class.
+
+\code
+row r;
+if(sql.single(r)) {
+\endcode
+
+If the result wasn't an empty set, the condition is true and we can readout the data from the row, using the "iostreams" like interface.
+
+\code
+r>>name;
+\endcode
+
+Now, we want to fetch some bigger data set. In this case we
+use the class result that stores the output data. We use:
+
+\code
+result res;
+sql.fetch(res);
+\endcode
+
+Now we can find out the number of rows calling \c res.rows() and iterate over each row calling \c res.next(r)
+
+
+
+
+*/

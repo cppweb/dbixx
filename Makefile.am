@@ -10,3 +10,5 @@ libdbixx_la_LDFLAGS  = -version-info 2:0:0 -no-undefined
 libdbixx_la_CXXFLAGS = -Wall
 
 nobase_pkginclude_HEADERS = dbixx.h
+
+EXTRA_DIST=Doxyfile main_page.txt
