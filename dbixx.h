@@ -135,6 +135,20 @@ public:
 	/// Get number of columns in the row
 	///
 	unsigned int cols();
+
+	///
+	/// Fetch value by column. It fetches the value from column \a col (starting from 1)
+	/// and returns it. If the column is null it throws dbixx_error
+	///
+	template<typename T>
+	T get(int col)
+	{
+		T v;
+		if(!fetch(col,v)) {
+			throw dbixx_error("Null value fetch");
+		}
+		return v;
+	}
 private:
 	template<typename T>
 	bool ufetch(int post,T &v);

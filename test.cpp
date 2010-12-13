@@ -58,7 +58,7 @@ int main()
 		std::tm atime={0};
 		string name="nonset";
 		r >> id >> k >> f >> atime >> name;
-		cout <<id << ' '<<k <<' '<<f<<' '<<name<<' '<<asctime(&atime)<<endl;
+		cout <<r.get<int>(1) << ' '<<k <<' '<<f<<' '<<name<<' '<< asctime(&atime) << endl;
 		cout<<"has "<<r.cols()<<" columns\n";
 		n++;
 	}
