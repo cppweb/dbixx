@@ -22,9 +22,9 @@ public:
 	///
 	/// Create an exception object with \a error and a query string \a q
 	///
-	dbixx_error(std::string const &error,std::string const &q=std::string()) :
+	dbixx_error(std::string const &error, std::string const &q=std::string()):
 		std::runtime_error(error),
-		query_()
+		query_(q)
 	{
 	}
 	~dbixx_error() throw()
@@ -47,12 +47,12 @@ public:
 	/// 
 	/// Creates an empty row
 	/// 
-	row() { current=0; owner=false; res=NULL; };
+	row() { current=0; owner=false; res=NULL; }
 	~row();
 	///
 	/// Get underlying libdbi object. For low level access
 	///
-	dbi_result get_dbi_result() { return res; };
+	dbi_result get_dbi_result() { return res; }
 	///
 	/// Check if this row has some data or not
 	///
@@ -120,17 +120,17 @@ public:
 	///
 	/// Syntactic sugar for isnull(id)
 	///
-	bool operator[](std::string const & id) { return isnull(id); };
+	bool operator[](std::string const & id) { return isnull(id); }
 	///
 	/// Syntactic sugar for isnull(id)
 	///
-	bool operator[](int ind) { return isnull(ind); };
+	bool operator[](int ind) { return isnull(ind); }
 	///
 	/// Fetch a value \a v from the row starting with first column. Each next call updates the internal pointer
 	/// to next column in row
 	///
 	template<typename T>
-	row &operator>>(T &v) { current++; fetch(current,v); return *this; };
+	row &operator>>(T &v) { current++; fetch(current,v); return *this; }
 	///
 	/// Get number of columns in the row
 	///
@@ -180,7 +180,7 @@ public:
 	///
 	/// Get internal result implementation
 	///
-	dbi_result get_dbi_result() { return res; };
+	dbi_result get_dbi_result() { return res; }
 	///
 	/// Create empty result
 	///
@@ -318,7 +318,7 @@ public:
 	///
 	/// Get low level libdbi connection object
 	///
-	dbi_conn get_dbi_conn() { return conn; };
+	dbi_conn get_dbi_conn() { return conn; }
 
 
 	///
@@ -344,7 +344,7 @@ public:
 	///
 	/// Get number of affected rows by the last statement
 	///
-	unsigned long long affected() { return affected_rows ;};
+	unsigned long long affected() { return affected_rows ;}
 
 	///
 	/// Bind a string parameter at next position in query
@@ -411,11 +411,11 @@ public:
 	///
 	/// Syntactic sugar for query(q)
 	///
-	session &operator<<(std::string const &q) { query(q); return *this; };
+	session &operator<<(std::string const &q) { query(q); return *this; }
 	///
 	/// Syntactic sugar for bind(v)
 	///	
-	session &operator,(std::string const &v) { bind(v,false); return *this; };
+	session &operator,(std::string const &v) { bind(v,false); return *this; }
 	///
 	/// Syntactic sugar for bind(p.first,p.second), usually used with use() function
 	///	
@@ -423,30 +423,30 @@ public:
 	///
 	/// Syntactic sugar for bind(v)
 	///	
-	session &operator,(char const *v) { bind(v,false); return *this; };
+	session &operator,(char const *v) { bind(v,false); return *this; }
 	///
 	/// Syntactic sugar for bind(v)
 	///	
-	session &operator,(std::tm const &v) { bind(v,false); return *this; };
+	session &operator,(std::tm const &v) { bind(v,false); return *this; }
 	
 	///
 	/// Syntactic sugar for calling exec() function.
 	///	
-	void operator,(dbixx::exec const &e) { exec(); };
+	void operator,(dbixx::exec const ) { exec(); }
 	///
 	/// Syntactic sugar for fetching result - calling fetch(res)
 	///	
-	void operator,(result &res) { fetch(res); };
+	void operator,(result &res) { fetch(res); }
 	///
 	/// Syntactic sugar for fetching a single row - calling single(r)
 	///	
-	bool operator,(row &r) { return single(r); };
+	bool operator,(row &r) { return single(r); }
 
 	///
 	/// Syntactic sugar for bind(v)
 	///	
 	template<typename T>
-	session &operator,(T v) { bind(v,false); return *this; };
+	session &operator,(T v) { bind(v,false); return *this; }
 
 	///
 	/// Syntactic sugar for bind(p.first,p.second), usually used with use() function
